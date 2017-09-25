@@ -5,6 +5,7 @@ This is an implemtation for NIPS paper: [Triangle Generative models](https://arx
 tensorflow 1.3.0, python 2.7
 
 ## 2. Basic Model:
-Here's is our model:![alt text][model]
+Here's is our model:
 
-[model]:(https://github.com/LiqunChen0606/Triangle-GAN/blob/master/figures/model.png)
+![alt text](https://raw.githubusercontent.com/LiqunChen0606/Triangle-GAN/master/figures/model.png)
+
