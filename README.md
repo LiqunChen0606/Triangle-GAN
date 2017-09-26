@@ -1,5 +1,5 @@
 # Triangle-GAN
-This is an implemtation for NIPS paper: [Triangle Generative models](https://arxiv.org/abs/1709.06548)
+This is an implemtation for NIPS paper: [Triangle Generative adversarial models](https://arxiv.org/abs/1709.06548)
 
 ## 1. Running environment: 
 tensorflow 1.3.0, python 2.7
