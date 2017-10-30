@@ -42,3 +42,20 @@ right: the joint distribution $p_y(x,y)$.
 figure (c): Tirple GAN without regularization terms
 left: the joint distribution $p_x(x,y)$;
 right: the joint distribution $p_y(x,y)$.
+
+## 4. Results
+### 1. conditional generated CIFAR images:
+![alt text](https://raw.githubusercontent.com/LiqunChen0606/Triangle-GAN/master/figures/cifar.png)
+### 2. MSCOCO:
+#### 1. generated COCO
+![alt text](https://raw.githubusercontent.com/LiqunChen0606/Triangle-GAN/master/figures/coco_gen.png)
+#### 2. COCO to attributes to COCO
+![alt text](https://raw.githubusercontent.com/LiqunChen0606/Triangle-GAN/master/figures/coco_result.jpg)
+### 3. CelebA tasks:
+#### 1. faces to attributes to faces
+![alt text](https://raw.githubusercontent.com/LiqunChen0606/Triangle-GAN/master/figures/face_att_face.jpg)
+#### 2. face editting
+![alt text](https://raw.githubusercontent.com/LiqunChen0606/Triangle-GAN/master/figures/face_editing.jpg)
+
+
+
