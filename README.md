@@ -14,7 +14,7 @@ For semi-supervised learning tasks, please see [here](https://github.com/LiqunCh
 ### 3. Resources
 For domain transfer and classification task: 
 If you want to re-run the CelebA experiment, the feature can be downloaded here:
-[CelebA features](https://www.dropbox.com/s/vhg7gq4zv0bicvm/celebA_tag_feats.mat?dl=0)
+[CelebA tag features](https://www.dropbox.com/s/vhg7gq4zv0bicvm/celebA_tag_feats.mat?dl=0)
 
 ## 2. Basic Model:
 Here's is our model:
