@@ -182,14 +182,11 @@ sess.run(init)
 #     print("\n--------model Not restored--------\n")
 #     pass
 disc_steps = 1
-gen_steps = 1
+gen_steps = 2
 paired_data_num = np.int32(0.5 * num_train) # change this to different percentage
 paired_data, paired_tag = sample_XY(Images, tag_feats, paired_data_num)
 for it in range(n_epochs):
-    arr = np.random.permutation(num_train)
-    Images = Images[arr]
-    arr = np.random.permutation(num_train)
-    tag_feats = tag_feats[arr]
+
     for idx in range(0, num_train // mb_size):
         X_p_mb, y_p_mb = sample_XY(paired_data, paired_tag, mb_size)
         X_u_mb = Images[idx*mb_size : (idx + 1) * mb_size]

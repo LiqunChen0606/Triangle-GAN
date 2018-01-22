@@ -50,13 +50,13 @@ def encoder1(tensor):
     conv2 =  layers.conv2d(conv1, 64, 4, stride=2, activation_fn=None, normalizer_fn= layers.batch_norm,weights_initializer=initializer)
     conv2 = layers.batch_norm(conv2, activation_fn=lrelu)
 
-    conv3 =  layers.conv2d(conv2, 128, 4, stride=2, activation_fn=None, normalizer_fn= layers.batch_norm, weights_initializer=initializer)                                  # 8 x 8 x 128
+    conv3 =  layers.conv2d(conv2, 128, 4, stride=2, activation_fn=None, weights_initializer=initializer)                                  # 8 x 8 x 128
     conv3 = layers.batch_norm(conv3, activation_fn=lrelu)
 
-    conv4 =  layers.conv2d(conv3, 256, 4, stride=2, activation_fn=None, normalizer_fn= layers.batch_norm, weights_initializer=initializer)                                  # 4 x 4 x 256
+    conv4 =  layers.conv2d(conv3, 256, 4, stride=2, activation_fn=None, weights_initializer=initializer)                                  # 4 x 4 x 256
     conv4 = layers.batch_norm(conv4, activation_fn=lrelu)
 
-    conv5 =  layers.conv2d(conv4, 512, 4, stride=2, activation_fn=None, normalizer_fn= layers.batch_norm, weights_initializer=initializer)                                  # 2 x 2 x 512
+    conv5 =  layers.conv2d(conv4, 512, 4, stride=2, activation_fn=None, weights_initializer=initializer)                                  # 2 x 2 x 512
     conv5 = layers.batch_norm(conv5, activation_fn=lrelu)
 
     fc1 = tf.reshape(conv5, shape=[-1, 2*2*512])

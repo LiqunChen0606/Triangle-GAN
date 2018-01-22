@@ -10,16 +10,15 @@ import tensorflow as tf
 import scipy.ndimage.interpolation
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-# from model_celebA_utils import encoder1, encoder2, discriminator
-from model_fancyCelebA_utils import encoder1, encoder2, discriminator
+from model_celebA_utils import encoder1, encoder2, discriminator
+
 import scipy.io as sio
 import pdb
 import h5py
 import json
 import time
 import cPickle
-from eval import diff
-from sklearn.metrics import roc_auc_score
+
 """ parameters """
 n_epochs = 10
 dataset_size = 50000
@@ -92,30 +91,34 @@ def plot(samples):
 #####################
 
 """ Networks """
-def generative_Y2X(y, z):
-    with tf.variable_scope("Y2X"):
+def generative_Y2X(y, z, reuse = None):
+    with tf.variable_scope("Y2X", reuse=reuse):
         h = encoder2(y, z)
     return h
-def generative_X2Y(x):
-    with tf.variable_scope("X2Y"):
+
+
+def generative_X2Y(x, reuse=None):
+    with tf.variable_scope("X2Y", reuse=reuse):
         h = encoder1(x)
     return h
 
-def data_network_1(x, y):
+
+def data_network_1(x, y, reuse=None):
     """Approximate z log data density."""
-    with tf.variable_scope('D1'):
+    with tf.variable_scope('D1', reuse=reuse):
         d = discriminator(x, y)
     return tf.squeeze(d, squeeze_dims=[1])
 
-def data_network_2(x, y):
+
+def data_network_2(x, y, reuse=None):
     """Approximate z log data density."""
-    with tf.variable_scope('D2'):
+    with tf.variable_scope('D2', reuse=reuse):
         d = discriminator(x, y)
     return tf.squeeze(d, squeeze_dims=[1])
 
 
 """ Construct model and training ops """
-tf.reset_default_graph()
+# tf.reset_default_graph()
 
 X_p = tf.placeholder(tf.float32, shape=[mb_size, 64, 64, 3])
 y_p = tf.placeholder(tf.float32, shape=[mb_size, Y_dim])
@@ -128,12 +131,12 @@ y_gen = generative_X2Y(X_u)
 X_gen = generative_Y2X(y_u, z)
 
 D1_real = data_network_1(X_p, y_p)
-D1_fake_y = data_network_1(X_u, y_gen)
-D1_fake_X = data_network_1(X_gen, y_u)
+D1_fake_y = data_network_1(X_u, y_gen, reuse=True)
+D1_fake_X = data_network_1(X_gen, y_u, reuse=True)
 
 # Discriminator B
 D2_real = data_network_2(X_u, y_gen)
-D2_fake = data_network_2(X_gen, y_u)
+D2_fake = data_network_2(X_gen, y_u, reuse=True)
 
 # Discriminator loss
 L_D1 = -tf.reduce_mean(log(D1_real) + log(1 - D1_fake_y) + log(1 - D1_fake_X))
@@ -171,7 +174,7 @@ init = tf.global_variables_initializer()
 sess.run(init)
 # Load pretrained Model
 try:
-    saver.restore(sess=sess, save_path="./model/model_trigan_celeb_eval_10.ckpt")
+    saver.restore(sess=sess, save_path="./model/model_trigan_CelebA.ckpt")
     print("\n--------model restored--------\n")
 except:
     print("\n--------model Not restored--------\n")
@@ -179,16 +182,11 @@ except:
 
 zz = sample_Z(mb_size, Z_dim)
 disc_steps = 1
-gen_steps = 1
+gen_steps = 2
 paired_data_num = np.int32(0.1 * num_train) # can change to 20%, 0.1%...
 paired_data, paired_tag = sample_XY(Images, tag_feats, paired_data_num)
 for it in range(n_epochs):
-    # pdb.set_trace()
-    arr = np.random.permutation(num_train)
-    Images = Images[arr]
-    arr = np.random.permutation(num_train)
-    tag_feats = tag_feats[arr]
-    # pdb.set_trace()
+
     for idx in range(0, num_train // mb_size):
         X_p_mb, y_p_mb = sample_XY(paired_data, paired_tag, mb_size)
 
@@ -231,56 +229,20 @@ for it in range(n_epochs):
             plt.close(fig)
             saver.save(sess, './model/model_trigan_celeb_eval_10.ckpt')
 
-    if it % 1 == 0:
-        # Test on the validation dataset
-
-        count = 0
-        val_auc = 0
-        val_score = np.zeros((1,40))
-        for j in range(0, num_val // mb_size):
-            val_x = Images_val[j*mb_size : (j + 1) * mb_size]
-            y_true = tag_feats_val[j*mb_size : (j + 1) * mb_size]
-            y_scores = sess.run(y_gen, feed_dict={X_u: val_x})
-            y_scores = np.squeeze(y_scores)
-            val_score = np.concatenate([val_score, y_scores], 0)
-            # val_auc += roc_auc_score(y_true, y_scores)
-            val_auc += diff(y_scores, y_true)
-            count += 1
-        val_auc /= count
-        del val_x
-        val_score = val_score[1:]
-        # Test on the test dataset
-        count = 0
-        test_auc = 0
-        test_score = np.zeros((1,40))
-        for j in range(0, num_test // mb_size):
-            test_x = Images_test[j*mb_size : (j + 1) * mb_size]
-            y_true = tag_feats_test[j*mb_size : (j + 1) * mb_size]
-            y_scores = sess.run(y_gen, feed_dict={X_u: test_x})
-            y_scores = np.squeeze(y_scores)
-            test_score = np.concatenate([test_score, y_scores], 0)
-            test_auc += diff(y_scores, y_true)
-            count += 1
-        test_auc /= count
-        del test_x
-        test_score = test_score[1:]
-        sio.savemat('./evaluation/10/val_score_%d.mat' % it, {'val_score': val_score})
-        sio.savemat('./evaluation/10/test_score_%d.mat' % it, {'test_score': test_score})
-        print('epoch: {};  validation auc: {:.4}; test auc: {:.4}'.format(it, val_auc, test_auc))
-    # if it % 1 == 0:
+    # if it % 10 == 0:
     #     print('Iter: {}; D_loss: {:.4}; G_loss: {:.4}'.format(it, D_loss_curr, G_loss_curr))
-    #
+    
     #     input_B = sample_X(tag_feats, size=8)
     #     input_B = np.repeat(input_B, 8, axis=0)
     #     zz = sample_Z(8, Z_dim)
     #     zz = np.repeat(zz, 8, axis=0)
     #     pdb.set_trace()
     #     samples_A = sess.run(X_gen, feed_dict={y_u: input_B, z: zz})
-    #
+    
     #     # The resulting image sample would be in 4 rows:
     #     # row 1: real data from domain A, row 2 is its domain B translation
     #     # row 3: real data from domain B, row 4 is its domain A translation
-    #
+    
     #     tag_feats_s = input_B
     #     f = open('./out_semi_gan_few/tags_{}.txt'.format(ii), 'w')
     #     for i in range(tag_feats_s.shape[0]):
@@ -295,23 +257,3 @@ for it in range(n_epochs):
     #                 .format(str(ii).zfill(3)), bbox_inches='tight')
     #     ii += 1
     #     plt.close(fig)
-
-
-    # if it % 200 == 0:
-    #     # pdb.set_trace()
-    #     input_A, label = mnist.test.next_batch(10000)
-    #     input_B = np.reshape(input_A, [-1, 28, 28])
-    #     input_B = scipy.ndimage.interpolation.rotate(input_B, 90, axes=(1, 2))
-    #     input_B = np.reshape(input_B, [-1, 28*28])
-    #     samples_A = sess.run(X_gen, feed_dict={y_u: input_B})
-    #     samples_A = np.reshape(samples_A, [-1, 28, 28])
-    #     samples_B = sess.run(y_gen, feed_dict={X_u: input_A})
-    #     samples_B = np.reshape(samples_B, [-1, 28, 28])
-    #     samples_B = scipy.ndimage.interpolation.rotate(samples_B, 270, axes=(1, 2))
-    #     tmp = np.max(label) + 1
-    #     label = np.uint8(np.eye(tmp)[label])
-    #     del tmp
-    #     sio.savemat('./valid_10000/label_%d.mat' % it, {'label': label})
-    #     sio.savemat('./valid_10000/sampleB_%d.mat' % it, {'dataB': samples_B})
-    #     sio.savemat('./valid_10000/sampleA_%d.mat' % it, {'dataA': samples_A})
-    #     print("finish saving!")
